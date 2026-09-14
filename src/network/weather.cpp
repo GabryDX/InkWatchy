@@ -27,7 +27,7 @@ void syncWeather()
     for (u8_t i = 0; i < WEATHER_TRIES; i++)
     {
       debugLog("Trying to get weather for day: " + String(currentDayDate));
-      status = getHourlyForecast(forecast, String(WEATHER_LATIT).toFloat(), String(WEATHER_LONGTIT).toFloat(), unixTimeWeat);
+      status = getHourlyForecast(forecast, atof(WEATHER_LATIT), atof(WEATHER_LONGTIT), unixTimeWeat);
       if (status == true)
       {
         break;
@@ -107,7 +107,7 @@ void syncWeather()
     for (u8_t i = 0; i < WEATHER_TRIES; i++)
     {
       debugLog("Trying to get air quality for day: " + String(currentDayDate));
-      status = getAirQualityForecast(airForecast, String(WEATHER_LATIT).toFloat(), String(WEATHER_LONGTIT).toFloat(), unixTimeAir);
+      status = getAirQualityForecast(airForecast, atof(WEATHER_LATIT), atof(WEATHER_LONGTIT), unixTimeAir);
       if (status == true)
       {
         break;

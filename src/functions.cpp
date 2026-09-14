@@ -204,17 +204,18 @@ void flushLogs()
 #endif
 }
 
-// Check if a function contains a character that has a line below like... g p q j
-bool containsBelowChar(String str)
+// Check if a string contains a character with a descender (line below baseline like g, p, q, j, y, _)
+bool containsBelowChar(const String &str)
 {
-  if (str.indexOf("g") != -1 || str.indexOf("p") != -1 || str.indexOf("q") != -1 || str.indexOf("j") != -1 || str.indexOf("y") != -1 || str.indexOf("_") != -1)
+  for (unsigned int i = 0; i < str.length(); ++i)
   {
-    return true;
+    char c = str[i];
+    if (c == 'g' || c == 'p' || c == 'q' || c == 'j' || c == 'y' || c == '_')
+    {
+      return true;
+    }
   }
-  else
-  {
-    return false;
-  }
+  return false;
 }
 
 void delayTask(int timeMs)
