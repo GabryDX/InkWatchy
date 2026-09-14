@@ -19,7 +19,9 @@ float getBattVoltage()
     {
         sum += BatteryRead();
         readedTimes = readedTimes + 1;
+#if VOLTAGE_AVG_DELAY > 0
         delayTask(VOLTAGE_AVG_DELAY);
+#endif
     }
 #else
     float sum = 0.0;
@@ -44,7 +46,9 @@ float getBattVoltage()
         }
         sum += readed;
         readedTimes = readedTimes + 1;
+#if VOLTAGE_AVG_DELAY > 0
         delayTask(VOLTAGE_AVG_DELAY);
+#endif
     }
 
 #endif
