@@ -23,15 +23,45 @@
 // Restores any rectangular region directly from the background 'field' bitmap in PROGMEM
 static void restoreFieldRegion(int rx, int ry, int rw, int rh)
 {
-    if (rx < 0 || ry < 0 || rx + rw > 200 || ry + rh > 200) return;
+    if (rx < 0 || ry < 0 || rx + rw > 200 || ry + rh > 200 || rw <= 0 || rh <= 0) return;
     for (int y = ry; y < ry + rh; y++)
     {
         int rowStart = y * 25;
-        for (int x = rx; x < rx + rw; x++)
+        int x = rx;
+        int endX = rx + rw;
+        while (x < endX)
         {
-            uint8_t b = pgm_read_byte(&field[rowStart + (x / 8)]);
-            bool isBlack = (b & (0x80 >> (x % 8))) != 0;
-            dis->drawPixel(x, y, isBlack ? SCBlack : SCWhite);
+            uint8_t b = pgm_read_byte(&field[rowStart + (x >> 3)]);
+            bool isBlack = (b & (0x80 >> (x & 7))) != 0;
+            uint16_t color = isBlack ? SCBlack : SCWhite;
+
+            int spanStart = x;
+            x++;
+
+            while (x < endX)
+            {
+                if ((x & 7) == 0)
+                {
+                    b = pgm_read_byte(&field[rowStart + (x >> 3)]);
+                    if (isBlack && b == 0xFF && (x + 8 <= endX))
+                    {
+                        x += 8;
+                        continue;
+                    }
+                    if (!isBlack && b == 0x00 && (x + 8 <= endX))
+                    {
+                        x += 8;
+                        continue;
+                    }
+                }
+                bool pixelIsBlack = (b & (0x80 >> (x & 7))) != 0;
+                if (pixelIsBlack != isBlack)
+                {
+                    break;
+                }
+                x++;
+            }
+            dis->drawFastHLine(spanStart, y, x - spanStart, color);
         }
     }
 }
@@ -39,21 +69,21 @@ static void restoreFieldRegion(int rx, int ry, int rw, int rh)
 static void drawDigit(int x, int y, int digit)
 {
     if (digit < 0 || digit > 9) return;
-    const unsigned char *digits[] = {dd_0, dd_1, dd_2, dd_3, dd_4, dd_5, dd_6, dd_7, dd_8, dd_9};
+    static const unsigned char * const digits[] = {dd_0, dd_1, dd_2, dd_3, dd_4, dd_5, dd_6, dd_7, dd_8, dd_9};
     dis->drawBitmap(x, y, digits[digit], 16, 25, SCBlack, SCWhite);
 }
 
 static void drawSmallDigit(int x, int y, int digit) 
 {
     if (digit < 0 || digit > 9) return;
-    const unsigned char* smallDigits[] = {num_0, num_1, num_2, num_3, num_4, num_5, num_6, num_7, num_8, num_9};
+    static const unsigned char * const smallDigits[] = {num_0, num_1, num_2, num_3, num_4, num_5, num_6, num_7, num_8, num_9};
     dis->drawBitmap(x, y, smallDigits[digit], 3, 5, SCBlack, SCWhite);
 }
 
 static void drawLargeDigit(int x, int y, int digit)
 {
     if (digit < 0 || digit > 9) return;
-    const unsigned char* largeDigits[] = {fd_0, fd_1, fd_2, fd_3, fd_4, fd_5, fd_6, fd_7, fd_8, fd_9};
+    static const unsigned char * const largeDigits[] = {fd_0, fd_1, fd_2, fd_3, fd_4, fd_5, fd_6, fd_7, fd_8, fd_9};
     dis->drawBitmap(x, y, largeDigits[digit], 33, 53, SCBlack, SCWhite);
 }
 
@@ -179,22 +209,14 @@ static void starfieldDrawDay()
     restoreFieldRegion(15, 70, 68, 18);
     restoreFieldRegion(45, 96, 36, 16);
 
-    String dayOfWeekName = dayStr(dayOfWeek);
-    if (dayOfWeekName.length() >= 3)
-    {
-        dayOfWeekName = dayOfWeekName.substring(0, dayOfWeekName.length() - 3);
-    }
+    const char *dayOfWeekName = getLocalizedDayByIndex(dayOfWeek);
     int16_t x1, y1;
     uint16_t textWidth, textHeight;
     dis->getTextBounds(dayOfWeekName, 5, 85, &x1, &y1, &textWidth, &textHeight);
-    if (dayOfWeek == 4) // Wednesday
-    {
-        textWidth -= 5;
-    }
     dis->setCursor(76 - textWidth, 86);
     dis->print(dayOfWeekName);
 
-    String monthName = monthShortStr(month + 1); // 1-indexed for monthShortStr
+    const char *monthName = getLocalizedMonthName(month);
     dis->getTextBounds(monthName, 60, 110, &x1, &y1, &textWidth, &textHeight);
     dis->setCursor(79 - textWidth, 110);
     dis->print(monthName);
@@ -259,9 +281,9 @@ static void starfieldDrawDay()
     int angle = moon.angle;
     double percentLit = moon.percentLit;
 
-    const unsigned char *waxingBitmaps[] = {luna1, luna12, luna11, luna10, luna9, luna8, luna7};
-    const unsigned char *waningBitmaps[] = {luna1, luna2, luna3, luna4, luna5, luna6, luna7};
-    const unsigned char **bitmaps = (angle <= 180) ? waxingBitmaps : waningBitmaps;
+    static const unsigned char * const waxingBitmaps[] = {luna1, luna12, luna11, luna10, luna9, luna8, luna7};
+    static const unsigned char * const waningBitmaps[] = {luna1, luna2, luna3, luna4, luna5, luna6, luna7};
+    const unsigned char * const *bitmaps = (angle <= 180) ? waxingBitmaps : waningBitmaps;
 
     int index;
     if (percentLit < 0.1) index = 0;
