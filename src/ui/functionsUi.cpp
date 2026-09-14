@@ -18,7 +18,7 @@ void setFont(const GFXfont *fontTmp)
   dis->setFont(font);
 }
 
-void writeLine(String strToWrite, int cursorX, uint16_t *currentHeight)
+void writeLine(const String &strToWrite, int cursorX, uint16_t *currentHeight)
 {
   dis->setCursor(cursorX, *currentHeight);
   dis->print(strToWrite);
@@ -26,7 +26,7 @@ void writeLine(String strToWrite, int cursorX, uint16_t *currentHeight)
 }
 
 // Remember to reset maxHeight if you don't use it
-void centerText(String str, uint16_t *currentHeight)
+void centerText(const String &str, uint16_t *currentHeight)
 {
   uint16_t w;
   getTextBounds(str, NULL, NULL, &w, NULL);
@@ -36,12 +36,10 @@ void centerText(String str, uint16_t *currentHeight)
   *currentHeight = *currentHeight + maxHeight;
 }
 
-void writeTextReplaceBack(String str, int16_t x, int16_t y, uint16_t frColor, uint16_t bgColor, bool manualWidth, uint8_t manualWidthAdd, uint8_t manualHeighAdd)
+void writeTextReplaceBack(const String &str, int16_t x, int16_t y, uint16_t frColor, uint16_t bgColor, bool manualWidth, uint8_t manualWidthAdd, uint8_t manualHeighAdd)
 {
-  // debugLog("Drawing bitmap with text: " + str + " at: " + String(x) + "x" + String(y));
   uint16_t w, h;
   getTextBounds(str, NULL, NULL, &w, &h);
-  // debugLog("w: " + String(w) + " h: " + String(h));
   if (manualWidth == false)
   {
     w = w + 5;
@@ -50,82 +48,53 @@ void writeTextReplaceBack(String str, int16_t x, int16_t y, uint16_t frColor, ui
   {
     w = w + manualWidthAdd;
   }
-  if (containsBelowChar(str) == true)
-  {
-    GFXcanvas1 canvasTmp(w, h + manualHeighAdd);
-    canvasTmp.setTextWrap(false);
-    canvasTmp.setFont(font);
-    canvasTmp.setTextSize(textSize);
-    canvasTmp.setCursor(0, h - manualHeighAdd);
-    if (manualWidth == true)
-    {
-      canvasTmp.setTextWrap(false);
-    }
-    canvasTmp.print(str);
-    dis->drawBitmap(x, y - h + manualHeighAdd, canvasTmp.getBuffer(), w, h + manualHeighAdd, frColor, bgColor); // this is relative to the cursor.
+
+  bool hasBelow = containsBelowChar(str);
+  uint16_t totalH = h + manualHeighAdd;
+  int16_t cursorY = hasBelow ? (h - manualHeighAdd) : h;
+  int16_t drawY = hasBelow ? (y - h + manualHeighAdd) : (y - h);
+
+  GFXcanvas1 canvasTmp(w, totalH);
+  canvasTmp.setTextWrap(false);
+  canvasTmp.setFont(font);
+  canvasTmp.setTextSize(textSize);
+  canvasTmp.setCursor(0, cursorY);
+  canvasTmp.print(str);
+  dis->drawBitmap(x, drawY, canvasTmp.getBuffer(), w, totalH, frColor, bgColor);
 #if DRAW_DEBUG_RECT
-    dis->drawRect(x, y - h + manualHeighAdd, w, h + manualHeighAdd, frColor);
+  dis->drawRect(x, drawY, w, totalH, frColor);
 #endif
-  }
-  else
-  {
-    GFXcanvas1 canvasTmp(w, h + manualHeighAdd);
-    canvasTmp.setFont(font);
-    canvasTmp.setTextSize(textSize);
-    canvasTmp.setCursor(0, h);
-    if (manualWidth == true)
-    {
-      canvasTmp.setTextWrap(false);
-    }
-    canvasTmp.print(str);
-    dis->drawBitmap(x, y - h, canvasTmp.getBuffer(), w, h + manualHeighAdd, frColor, bgColor); // this is relative to the cursor.
-#if DRAW_DEBUG_RECT
-    dis->drawRect(x, y - h, w, h + manualHeighAdd, frColor);
-#endif
-  }
 }
 
-void writeTextCenterReplaceBack(String str, uint16_t y, uint16_t frColor, uint16_t bgColor)
+void writeTextCenterReplaceBack(const String &str, uint16_t y, uint16_t frColor, uint16_t bgColor)
 {
   uint16_t w, h;
   getTextBounds(str, NULL, NULL, &w, &h);
-  // debugLog("w: " + String(w));
-  // debugLog("h: " + String(h));
   w = w + 5;
   int16_t x = (dis->width() - w) / 2;
-  if (containsBelowChar(str) == true)
-  {
-    GFXcanvas1 canvasTmp(w, h + 3);
-    canvasTmp.setFont(font);
-    canvasTmp.setTextSize(textSize);
-    canvasTmp.setCursor(0, h - 3);
-    canvasTmp.print(str);
-    dis->fillRect(0, y - h, 200, h + 3, SCWhite);
-    dis->drawBitmap(x, y - h + 3, canvasTmp.getBuffer(), w, h + 3, frColor, bgColor); // this is relative to the cursor.
+
+  bool hasBelow = containsBelowChar(str);
+  uint16_t totalH = h + 3;
+  int16_t cursorY = hasBelow ? (h - 3) : h;
+  int16_t drawY = hasBelow ? (y - h + 3) : (y - h);
+
+  GFXcanvas1 canvasTmp(w, totalH);
+  canvasTmp.setFont(font);
+  canvasTmp.setTextSize(textSize);
+  canvasTmp.setCursor(0, cursorY);
+  canvasTmp.print(str);
+  dis->fillRect(0, y - h, 200, totalH, SCWhite);
+  dis->drawBitmap(x, drawY, canvasTmp.getBuffer(), w, totalH, frColor, bgColor);
 #if DRAW_DEBUG_RECT
-    dis->drawRect(x, y - h + 3, w, h + 3, frColor);
+  dis->drawRect(x, drawY, w, totalH, frColor);
 #endif
-  }
-  else
-  {
-    GFXcanvas1 canvasTmp(w, h + 3);
-    canvasTmp.setFont(font);
-    canvasTmp.setTextSize(textSize);
-    canvasTmp.setCursor(0, h);
-    canvasTmp.print(str);
-    dis->fillRect(0, y - h, 200, h + 3, SCWhite);
-    dis->drawBitmap(x, y - h, canvasTmp.getBuffer(), w, h + 3, frColor, bgColor); // this is relative to the cursor.
-#if DRAW_DEBUG_RECT
-    dis->drawRect(x, y - h, w, h + 3, frColor);
-#endif
-  }
 }
 
 int16_t xS;
 int16_t yS;
 uint16_t wS;
 uint16_t hS;
-void getTextBounds(String &str, int16_t *xa, int16_t *ya, uint16_t *wa, uint16_t *ha, int16_t cxa, int16_t cya)
+void getTextBounds(const String &str, int16_t *xa, int16_t *ya, uint16_t *wa, uint16_t *ha, int16_t cxa, int16_t cya)
 {
   int16_t cx = dis->getCursorX();
   int16_t cy = dis->getCursorY();
@@ -304,7 +273,7 @@ sizeInfo drawButton(int16_t x, int16_t y, String str, ImageDef *image, bool inve
   return size;
 }
 
-void simpleCenterText(String text)
+void simpleCenterText(const String &text)
 {
   dis->fillScreen(SCWhite);
   writeTextCenterReplaceBack(text, dis->height() / 2);

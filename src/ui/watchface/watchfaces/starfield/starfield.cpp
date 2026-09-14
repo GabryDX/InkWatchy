@@ -140,8 +140,8 @@ static void updateSunriseSunset()
 
     if (strlen(WEATHER_LATIT) > 0 && strlen(WEATHER_LONGTIT) > 0)
     {
-        float lat = String(WEATHER_LATIT).toFloat();
-        float lon = String(WEATHER_LONGTIT).toFloat();
+        float lat = atof(WEATHER_LATIT);
+        float lon = atof(WEATHER_LONGTIT);
         float tzHours = -((float)timeZoneOffset / 3600.0f);
 
         int32_t day = timeRTCLocal.Day;
