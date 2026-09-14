@@ -40,9 +40,9 @@
     WF_S_DAY_THU, WF_S_DAY_FRI, WF_S_DAY_SAT}
 
 // Helper function to get localized month name
-inline String getLocalizedMonthName(int month)
+inline const char *getLocalizedMonthName(int month)
 {
-    static const String monthNames[] = LANGUAGE_MONTH_NAMES;
+    static const char * const monthNames[] = LANGUAGE_MONTH_NAMES;
     if (month >= 0 && month < 12)
     {
         return monthNames[month];
@@ -53,9 +53,9 @@ inline String getLocalizedMonthName(int month)
 // Helper function to get localized day name by day of week index
 // dayOfWeek: 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 // offset: days to add/subtract from current day
-inline String getLocalizedDayByIndex(int dayOfWeek, int offset = 0)
+inline const char *getLocalizedDayByIndex(int dayOfWeek, int offset = 0)
 {
-    static const String dayNames[] = LANGUAGE_DAY_NAMES;
+    static const char * const dayNames[] = LANGUAGE_DAY_NAMES;
 
     // Apply offset and wrap around
     int dayIndex = (dayOfWeek + offset + 6) % 7;
@@ -69,7 +69,7 @@ inline String getLocalizedDayByIndex(int dayOfWeek, int offset = 0)
 
 // Convenience function for getting current day name with offset
 // This should be used where timeRTCLocal is available
-inline String getCurrentLocalizedDayName(int offset = 0)
+inline const char *getCurrentLocalizedDayName(int offset = 0)
 {
     extern tmElements_t timeRTCLocal; // Forward declaration
     return getLocalizedDayByIndex(timeRTCLocal.Wday, offset);
