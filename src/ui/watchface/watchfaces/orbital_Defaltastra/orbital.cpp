@@ -326,7 +326,7 @@ static void orbitalDrawNightTime()
     // Prefer weather coordinates if provided in confidential.h, otherwise fall back to ORBITAL_ macros
     float lat = ORBITAL_LAT;
     float lon = ORBITAL_LON;
-    if (String(WEATHER_LATIT).length() > 0 && String(WEATHER_LONGTIT).length() > 0)
+    if (strlen(WEATHER_LATIT) > 0 && strlen(WEATHER_LONGTIT) > 0)
     {
         lat = String(WEATHER_LATIT).toFloat();
         lon = String(WEATHER_LONGTIT).toFloat();
